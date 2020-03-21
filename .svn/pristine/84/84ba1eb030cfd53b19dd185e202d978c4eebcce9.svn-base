@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  
+  $Id$
+-->
+<project name="JetspeedInstaller" default="install" basedir=".">
+
+  <taskdef name="checkConnection" classname="org.apache.jetspeed.anttasks.AntInstallerCheckConnection" />
+
+  <property file="ant.install.properties" />
+
+  <target name="setupInstallation">
+
+    <echo>Starting the installation</echo>
+    <condition property="jdk15Installed">
+      <equals arg1="${ant.java.version}" arg2="1.5" />
+    </condition>
+    <mkdir dir="${installDir}"/>
+
+    <echo>Deleting all content from the installation target directory</echo>
+    <delete includeemptydirs="true">
+      <fileset dir="${installDir}" includes="**/*"/>
+    </delete>
+
+    <echo>Installing Jetspeed-2.3.0-SNAPSHOT Enterprise Portal</echo>
+    <unzip src="${antinstaller.jar}" dest="${installDir}">
+      <patternset>
+        <include name="tomcat-portal.zip" />
+        <include name="database.zip" />
+      </patternset>
+    </unzip>
+    <unzip dest="${installDir}">
+      <fileset dir="${installDir}" includes="*.zip"/>
+    </unzip>
+    <delete>
+      <fileset dir="${installDir}" includes="*.zip"/>
+    </delete>
+    <chmod perm="700" dir="${installDir}/bin" includes="**/*.sh" />
+
+    <echo>Setting up the database configuration</echo>
+    <condition property="jdbcjar" value="${installDir}/database/lib/derby-10.3.2.1.jar">
+      <equals arg1="${jdbc.driver.jar}" arg2="" />
+    </condition>
+    <property name="jdbcjar" value="${jdbc.driver.jar}" />
+    <copy failonerror="false" todir="${installDir}/lib" file="${jdbcjar}" />
+    <move file="${installDir}/database/database.properties.template" tofile="${installDir}/database/database.properties"
+      overwrite="true">
+      <filterset begintoken="@" endtoken="@">
+        <filter token="db.type" value="${db.type}" />
+        <filter token="db.username" value="${db.username}" />
+        <filter token="db.password" value="${db.password}" />
+        <filter token="jdbc.url" value="${jdbc.url}" />
+        <filter token="jdbc.driver.class" value="${jdbc.driver.class}" />
+        <filter token="dbImportPsml" value="${dbImportPsml}" />
+        <filter token="installation.type" value="${installationType}" />
+        <filter token="installation.ui" value="${pipelineType}" />
+      </filterset>
+    </move>
+
+  </target>
+
+  <target name="install" depends="setupInstallation,checkMinimalInstall,minimalInstall,installPortal" />
+
+  <target name="installPortal">
+
+    <echo>Setting up default index redirect url</echo>  	
+    <condition property="_indexRedirectTo" value="portal">
+        <equals arg1="${pipelineType}" arg2="classic" />
+    </condition>
+    <condition property="_indexRedirectTo" value="ui">
+        <equals arg1="${pipelineType}" arg2="jetui" />
+    </condition>
+    <move file="${installDir}/webapps/jetspeed/index.jsp" 
+        tofile="${installDir}/webapps/jetspeed/index.jsp.unfiltered"/>
+    <move file="${installDir}/webapps/jetspeed/index.jsp.unfiltered" 
+        tofile="${installDir}/webapps/jetspeed/index.jsp"
+        overwrite="true">
+       <filterset begintoken="encodeRedirectURL(&quot;" endtoken="/&quot;))">
+         <filter token="portal" value="encodeRedirectURL(&quot;${_indexRedirectTo}/&quot;))" />
+       </filterset>
+    </move>
+    <echo>Moving pages out of jetspeed webapp</echo>
+    <condition property="_installPagesDirName" value="ui-pages">
+      <and>
+        <equals arg1="${installationType}" arg2="demo" />
+        <equals arg1="${pipelineType}" arg2="jetui" />
+      </and>
+    </condition>
+    <condition property="_installPagesDirName" value="pages">
+      <and>
+        <equals arg1="${installationType}" arg2="demo" />
+        <equals arg1="${pipelineType}" arg2="classic" />
+      </and>
+    </condition>
+    <condition property="_installPagesDirName" value="min-ui-pages">
+      <and>
+        <equals arg1="${installationType}" arg2="minimal" />
+        <equals arg1="${pipelineType}" arg2="jetui" />
+      </and>
+    </condition>
+    <condition property="_installPagesDirName" value="min-pages">
+      <and>
+        <equals arg1="${installationType}" arg2="minimal" />
+        <equals arg1="${pipelineType}" arg2="classic" />
+      </and>
+    </condition>
+    <echo>Installing: ${_installPagesDirName}</echo>
+    <move todir="${installDir}/pages">
+      <fileset dir="${installDir}/webapps/jetspeed/WEB-INF/${_installPagesDirName}" includes="**/*" />
+    </move>
+    <move file="${installDir}/webapps/jetspeed/WEB-INF/conf/jetspeed.properties" 
+        tofile="${installDir}/webapps/jetspeed/WEB-INF/conf/jetspeed.properties.unfiltered"/>
+    <move file="${installDir}/webapps/jetspeed/WEB-INF/conf/jetspeed.properties.unfiltered" 
+        tofile="${installDir}/webapps/jetspeed/WEB-INF/conf/jetspeed.properties"
+        overwrite="true">
+         <!-- note that the $ is escaped here -->
+       <filterset begintoken="psml.pages.path" endtoken="$${applicationRoot}/WEB-INF/pages">
+         <filter token=" = " value="psml.pages.path = $${applicationRoot}/../../pages" />
+       </filterset>
+    </move>
+    <delete includeEmptyDirs="true">
+      <fileset dir="${installDir}/webapps/jetspeed/WEB-INF/ui-pages" />
+      <fileset dir="${installDir}/webapps/jetspeed/WEB-INF/pages" />
+      <fileset dir="${installDir}/webapps/jetspeed/WEB-INF/min-ui-pages" />
+      <fileset dir="${installDir}/webapps/jetspeed/WEB-INF/min-pages" />
+    </delete>
+
+    <echo>Configure portal pipeline</echo>
+    <condition property="_jetuiCustomizationMethod" value="ajax">
+      <equals arg1="${pipelineType}" arg2="jetui" />
+    </condition>
+    <condition property="_jetuiCustomizationMethod" value="server">
+      <not>
+        <isset property="_jetuiCustomizationMethod" />
+      </not>
+    </condition>
+    <echo>Customization method: ${_jetuiCustomizationMethod}</echo>
+    <move file="${installDir}/webapps/jetspeed/WEB-INF/conf/jetspeed.properties" 
+        tofile="${installDir}/webapps/jetspeed/WEB-INF/conf/jetspeed.properties.unfiltered"/>
+    <move file="${installDir}/webapps/jetspeed/WEB-INF/conf/jetspeed.properties.unfiltered" 
+        tofile="${installDir}/webapps/jetspeed/WEB-INF/conf/jetspeed.properties"
+        overwrite="true">
+       <filterset begintoken="jetui.customization.method" endtoken="server" recurse="false">
+         <filter token=" = " value="jetui.customization.method = ${_jetuiCustomizationMethod}" />
+       </filterset>
+    </move>
+
+    <echo>Setting up the Jetspeed database (if selected)</echo>
+    <ant antfile="${installDir}/database/build.xml" target="${setupDBAntTarget}" dir="${installDir}/database" inheritAll="true" />
+
+  </target>
+
+  <target name="checkMinimalInstall">
+
+    <condition property="_minimalInstallationType" value="true">
+      <equals arg1="${installationType}" arg2="minimal" />
+    </condition>
+
+  </target>
+
+  <target name="minimalInstall" if="_minimalInstallationType">
+
+    <echo>Removing demo webapps</echo>
+    <delete>
+      <fileset dir="${installDir}/webapps">
+        <include name="demo.war" />      
+        <include name="rss.war" />
+        <include name="webcontent2.war" />
+        <include name="dbbrowser.war" />
+      </fileset>
+    </delete>
+
+  </target>
+
+  <target name="antinstaller-checksourcedb">
+
+    <checkConnection driver="${source.jdbcDriverClass}" url="${source.jdbcUrl}" userid="${source.dbUser}" password="${source.dbPassword}">
+      <classpath>
+        <pathelement location="${source.jdbcDriverJar}" />
+      </classpath>
+    </checkConnection>
+    <antinstaller-property name="source.dbvalid" value="true" />
+
+  </target>
+
+  <target name="antinstaller-checkdb">
+
+    <checkConnection driver="${jdbcDriverClass}" url="${jdbcUrl}" userid="${dbUser}" password="${dbPassword}">
+      <classpath>
+        <pathelement location="${jdbcDriverJar}" />
+      </classpath>
+    </checkConnection>
+    <antinstaller-property name="dbvalid" value="true" />
+
+  </target>
+
+  <target name="initdb" depends="setupInstallation,initPortalDB"/>
+
+  <target name="initPortalDB">
+
+    <echo>Reset and initialize Jetspeed database</echo>
+    <ant antfile="${installDir}/database/build.xml" target="initDB" dir="${installDir}/database" inheritAll="true" />
+
+    <echo>Deleting temporary installation target directory</echo>
+    <delete dir="${installDir}"/>
+
+  </target>
+
+  <target name="exportdb" depends="setupInstallation,exportPortalDB"/>
+
+  <target name="exportPortalDB">
+
+    <echo>Export all data from Jetspeed database</echo>
+    <mkdir dir="${exportDataDir}"/>
+    <delete includeemptydirs="true">
+      <fileset dir="${exportDataDir}" includes="**/*"/>
+    </delete>
+    <ant antfile="${installDir}/database/build.xml" target="exportDB" dir="${installDir}/database" inheritAll="true" />
+
+    <echo>Deleting temporary installation target directory</echo>
+    <delete dir="${installDir}"/>
+
+  </target>
+
+  <target name="importdb" depends="setupInstallation,importPortalDB"/>
+
+  <target name="importPortalDB">
+
+    <echo>Import all data into Jetspeed database</echo>
+    <ant antfile="${installDir}/database/build.xml" target="importDB" dir="${installDir}/database" inheritAll="true" />
+
+    <echo>Deleting temporary installation target directory</echo>
+    <delete dir="${installDir}"/>
+
+  </target>
+
+  <target name="migratedb" depends="setupInstallation,migratePortalDB"/>
+
+  <target name="migratePortalDB">
+
+    <echo>Setting up the source database configuration</echo>
+    <copy failonerror="false" todir="${installDir}/lib" file="${source.jdbc.driver.jar}" />
+
+    <echo>Migrate Jetspeed databases</echo>
+    <ant antfile="${installDir}/database/build.xml" target="migrateDB" dir="${installDir}/database" inheritAll="true" />
+
+    <echo>Deleting temporary installation target directory</echo>
+    <delete dir="${installDir}"/>
+
+  </target>
+
+</project>

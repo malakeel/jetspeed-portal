@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  
+  <artifactId>jetspeed-archetype</artifactId>
+  <description>Jetspeed 2 Maven Archetype</description>
+  <name>Jetspeed 2 Maven Archetype</name>
+  <parent>
+    <groupId>org.apache.portals.jetspeed-2</groupId>
+    <artifactId>jetspeed-2</artifactId>
+    <version>2.3.0</version>
+  </parent>
+  <packaging>maven-archetype</packaging>
+
+  <dependencies>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>jetspeed-portal-resources</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>jetspeed</artifactId>
+      <version>${project.version}</version>
+      <type>war</type>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <extensions>
+      <extension>
+        <groupId>org.apache.maven.archetype</groupId>
+        <artifactId>archetype-packaging</artifactId>
+        <version>2.0-alpha-4</version>
+      </extension>
+    </extensions>
+    <plugins>
+      <plugin>
+        <artifactId>maven-archetype-plugin</artifactId>
+        <version>2.0-alpha-4</version>
+        <extensions>true</extensions>
+      </plugin>
+
+      <plugin>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>jetspeed-unpack-maven-plugin</artifactId>
+        <version>${project.version}</version>
+        <executions>
+          <execution>
+            <id>unpack-archetype-seed-resources</id>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <phase>generate-resources</phase>
+            <configuration>
+              <unpack>
+                <artifact>${project.groupId}:jetspeed-portal-resources:jar</artifact>
+                <targetDirectory>${project.build.outputDirectory}</targetDirectory>
+                <resources>
+                  <resource>
+                    <path>seed/min</path>
+                    <include>j2-ui-seed.xml</include>
+                    <destination>archetype-resources/__rootArtifactId__-portal/src/sql/min</destination>
+                    <name>j2-seed.xml</name>
+                  </resource>
+                  <resource>
+                    <path>conf/jetspeed</path>
+                    <include>override.properties</include>
+                    <destination>archetype-resources/__rootArtifactId__-portal/src/main/webapp/WEB-INF/conf</destination>
+                  </resource>
+                </resources>
+              </unpack>
+            </configuration>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>jetspeed-portal-resources</artifactId>
+            <version>${project.version}</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+
+      <plugin>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>jetspeed-unpack-war-maven-plugin</artifactId>
+        <version>${project.version}</version>
+        <executions>
+          <execution>
+            <id>unpack-archetype-page-resources</id>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <phase>generate-resources</phase>
+            <configuration>
+              <unpack>
+                <artifact>${project.groupId}:jetspeed:war</artifact>
+                <targetDirectory>${project.build.outputDirectory}</targetDirectory>
+                <resources>
+                  <resource>
+                    <path>WEB-INF/min-ui-pages</path>
+                    <include>**/*</include>
+                    <destination>archetype-resources/__rootArtifactId__-portal/src/main/webapp/WEB-INF/pages</destination>
+                    <overwrite>false</overwrite>
+                  </resource>
+                </resources>
+              </unpack>
+            </configuration>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>jetspeed</artifactId>
+            <version>${project.version}</version>
+            <type>war</type>
+          </dependency>
+        </dependencies>
+      </plugin>
+    </plugins>
+  </build>
+</project>

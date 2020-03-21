@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+    $Id:$
+  -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <prerequisites>
+    <maven>2.0.9</maven>
+  </prerequisites>
+
+  <!-- POM Identification -->
+
+  <artifactId>jetspeed-enterprise-full</artifactId>
+  <parent>
+    <groupId>org.apache.portals.jetspeed-2</groupId>
+    <artifactId>jetspeed-enterprise</artifactId>
+    <version>2.3.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>    
+  <packaging>ear</packaging>
+  <name>Jetspeed-2 Full Enterprise Archive</name>
+
+  <!-- Application Dependencies -->
+  
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.portals.applications</groupId>
+      <artifactId>apa-demo</artifactId>
+      <type>war</type>
+    </dependency>        
+    <dependency>
+      <groupId>org.apache.portals.applications</groupId>
+      <artifactId>apa-rss-war</artifactId>
+      <type>war</type>
+    </dependency>        
+    <dependency>
+      <groupId>org.apache.portals.applications</groupId>
+      <artifactId>apa-webcontent2-war</artifactId>
+      <type>war</type>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.portals.applications</groupId>
+      <artifactId>apa-dbbrowser-war</artifactId>
+      <type>war</type>
+    </dependency>
+  </dependencies>
+
+  <!-- POM build -->
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-ear-plugin</artifactId>
+        <version>2.4.2</version>
+        <configuration>
+          <modules>
+            <!-- skinny wars: must be explicitly repackaged in build.xml invoked below -->
+            <webModule>
+              <groupId>${project.groupId}</groupId>
+              <artifactId>jetspeed-demo</artifactId>
+              <contextRoot>/jetspeed</contextRoot>
+            </webModule>                                              
+            <webModule>
+              <groupId>${project.groupId}</groupId>
+              <artifactId>j2-admin</artifactId>
+              <contextRoot>/j2-admin</contextRoot>
+            </webModule>
+            <webModule>
+              <groupId>org.apache.portals.applications</groupId>
+              <artifactId>apa-demo</artifactId>
+              <contextRoot>/demo</contextRoot>
+            </webModule>                       
+            <webModule>
+              <groupId>org.apache.portals.applications</groupId>
+              <artifactId>apa-rss-war</artifactId>
+              <contextRoot>/rss</contextRoot>
+            </webModule>                       
+            <webModule>
+              <groupId>org.apache.portals.applications</groupId>
+              <artifactId>apa-webcontent2-war</artifactId>
+              <contextRoot>/webcontent2</contextRoot>
+            </webModule>                       
+            <webModule>
+              <groupId>org.apache.portals.applications</groupId>
+              <artifactId>apa-dbbrowser-war</artifactId>
+              <contextRoot>/dbbrowser</contextRoot>
+            </webModule>                       
+
+            <!-- skinny wars classpath lib jars -->
+            <jarModule>
+              <groupId>javax.ccpp</groupId>
+              <artifactId>ccpp</artifactId>
+              <bundleDir>/lib</bundleDir>
+            </jarModule>
+            <jarModule>
+              <groupId>${project.groupId}</groupId>
+              <artifactId>jetspeed-api</artifactId>
+              <bundleDir>/lib</bundleDir>
+            </jarModule>
+            <jarModule>
+              <groupId>${project.groupId}</groupId>
+              <artifactId>jetspeed-commons</artifactId>
+              <bundleDir>/lib</bundleDir>
+            </jarModule>
+            <jarModule>
+              <groupId>org.apache.portals.bridges</groupId>
+              <artifactId>portals-bridges-common</artifactId>
+              <bundleDir>/lib</bundleDir>
+            </jarModule>
+            <jarModule>                      
+              <groupId>org.apache.portals</groupId>
+              <artifactId>portlet-api_2.1.0_spec</artifactId>
+              <bundleDir>/lib</bundleDir>
+            </jarModule>
+            <jarModule>                      
+              <groupId>org.apache.portals.pluto</groupId>
+              <artifactId>pluto-container-api</artifactId>
+              <bundleDir>/lib</bundleDir>
+            </jarModule>                                              
+            <jarModule>                      
+              <groupId>org.apache.portals.pluto</groupId>
+              <artifactId>pluto-taglib</artifactId>
+              <bundleDir>/lib</bundleDir>
+            </jarModule>                                              
+          </modules>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>maven-ear-plugin-skinny-wars</id>
+            <phase>package</phase>
+            <configuration>
+              <tasks>
+                <ant target="ear-full-package" dir="${basedir}" inheritAll="true">
+                  <property name="basedir" value="${basedir}"/>
+                  <property name="configureDBPM" value="${configureDBPM}"/>
+                  <property name="org.apache.portals.applications.apa-dbbrowser.version" value="${org.apache.portals.applications.apa-dbbrowser.version}"/>
+                  <property name="org.apache.portals.applications.apa-demo.version" value="${org.apache.portals.applications.apa-demo.version}"/>
+                  <property name="org.apache.portals.applications.apa-rss.version" value="${org.apache.portals.applications.apa-rss.version}"/>
+                  <property name="org.apache.portals.applications.apa-webcontent2.version" value="${org.apache.portals.applications.apa-webcontent2.version}"/>
+                  <property name="pom.version" value="${project.version}"/>
+                  <property name="project.version" value="${project.version}"/>
+                  <property name="project.build.directory" value="${project.build.directory}"/>
+                  <property name="project.build.finalName" value="${project.build.finalName}"/>
+                </ant>
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>jetspeed-api</artifactId>
+            <version>${project.version}</version>
+          </dependency>        
+          <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>jetspeed-deploy-tools</artifactId>
+            <version>${project.version}</version>
+          </dependency>        
+          <!-- force ant version for plugin -->
+          <dependency>
+            <groupId>org.apache.ant</groupId>
+            <artifactId>ant</artifactId>
+            <version>${ant.version}</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+    </plugins>
+  </build>
+
+  <!-- Profiles -->
+
+  <profiles>
+    <profile>
+      <id>dbpsml</id>
+      <properties>
+        <configureDBPM>true</configureDBPM>
+      </properties>
+    </profile>
+  </profiles>
+
+</project>
+

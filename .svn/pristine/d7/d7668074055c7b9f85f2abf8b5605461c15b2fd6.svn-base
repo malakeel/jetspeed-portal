@@ -1,0 +1,907 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  
+  $Id$
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <prerequisites>
+    <maven>2.0.9</maven>
+  </prerequisites>
+
+  <artifactId>jetspeed-mvn-demo-pom</artifactId>
+  <name>Jetspeed-2 Maven Invoker Configuration for Jetspeed Demo Portal</name>
+  <description>Jetspeed-2 Maven Invoker Configuration for Jetspeed Demo Portal</description>
+  <parent>
+    <groupId>org.apache.portals.jetspeed-2</groupId>
+    <artifactId>applications</artifactId>
+    <version>2.3.0-SNAPSHOT</version>
+  </parent>
+  
+  <packaging>pom</packaging>
+
+  <properties>
+    <org.apache.portals.jetspeed.version>${project.version}</org.apache.portals.jetspeed.version>
+    <org.apache.jetspeed.portal.context.name>jetspeed</org.apache.jetspeed.portal.context.name>
+    <org.apache.jetspeed.server.home>${project.build.directory}/demo-deploy</org.apache.jetspeed.server.home>
+  </properties>
+
+  <build>
+    <defaultGoal>process-resources</defaultGoal>
+  </build>
+
+  <profiles>
+
+    <!--
+        seed profile:
+
+        - invoke the serializer on /seed/${seed.file} resource from jetspeed-portal-resources
+    -->
+    <profile>
+      <id>seed</id>
+      <build>
+        <plugins>
+
+          <plugin>
+            <groupId>org.apache.portals.jetspeed-2</groupId>
+            <artifactId>jetspeed-db-maven-plugin</artifactId>
+            <version>${org.apache.portals.jetspeed.version}</version>
+            <executions>
+              <execution>
+                <id>seed</id>
+                <goals>
+                  <goal>init</goal>
+                </goals>
+                <phase>process-resources</phase>
+                <configuration>
+                  <connection>
+                    <username>${org.apache.jetspeed.production.database.user}</username>
+                    <password>${org.apache.jetspeed.production.database.password}</password>
+                    <url>${org.apache.jetspeed.production.database.url}</url>
+                    <driver>${org.apache.jetspeed.production.database.driver}</driver>
+                  </connection>
+                  <unpack>
+                    <artifact>org.apache.portals.jetspeed-2:jetspeed-portal-resources:jar</artifact>
+                    <resources>
+                      <resource>
+                        <path>seed</path>
+                        <destination>db/seed</destination>
+                      </resource>
+                    </resources>
+                  </unpack>
+                  <seed>
+                    <categories>serializer</categories>
+                    <filterPropertiesFileName>
+                      ${project.build.directory}/jetspeed-demo-${project.version}/WEB-INF/conf/spring-filter.properties
+                    </filterPropertiesFileName>
+                    <applicationRootPath>
+                      ${project.build.directory}/jetspeed-demo-${project.version}
+                    </applicationRootPath>
+                    <files>
+                      <file>${project.build.directory}/db/seed/${seed.file}</file>
+                    </files>
+                    <initProperties>
+                      <org.apache.jetspeed.database.user>${org.apache.jetspeed.production.database.user}</org.apache.jetspeed.database.user>
+                      <org.apache.jetspeed.database.password>${org.apache.jetspeed.production.database.password}</org.apache.jetspeed.database.password>
+                      <org.apache.jetspeed.database.url>${org.apache.jetspeed.production.database.url}</org.apache.jetspeed.database.url>
+                      <org.apache.jetspeed.database.driver>${org.apache.jetspeed.production.database.driver}</org.apache.jetspeed.database.driver>
+                    </initProperties>
+                  </seed>
+                </configuration>
+              </execution>
+            </executions>
+            <dependencies>
+              <dependency>
+                <groupId>org.apache.portals.jetspeed-2</groupId>
+                <artifactId>jetspeed-portal-resources</artifactId>
+                <version>${org.apache.portals.jetspeed.version}</version>
+              </dependency>
+              <dependency>
+                <groupId>org.apache.portals.jetspeed-2</groupId>
+                <artifactId>jetspeed-db-tools</artifactId>
+                <version>${org.apache.portals.jetspeed.version}</version>
+              </dependency>
+              <dependency>
+                <groupId>${org.apache.jetspeed.production.jdbc.driver.groupId}</groupId>
+                <artifactId>${org.apache.jetspeed.production.jdbc.driver.artifactId}</artifactId>
+                <version>${org.apache.jetspeed.production.jdbc.driver.version}</version>
+              </dependency>
+            </dependencies>
+          </plugin>
+
+        </plugins>
+      </build>
+    </profile>
+
+    <!--
+        seed-dbpsml profile:
+
+        - invoke the page serializer on /WEB-INF/${seed.pages} in demo portal
+    -->
+    <profile>
+      <id>seed-dbpsml</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.portals.jetspeed-2</groupId>
+            <artifactId>jetspeed-db-maven-plugin</artifactId>
+            <version>${org.apache.portals.jetspeed.version}</version>
+            <executions>
+              <execution>
+                <id>seed-dbpsml</id>
+                <goals>
+                  <goal>init</goal>
+                </goals>
+                <phase>process-resources</phase>
+                <configuration>
+                  <psml>
+                    <categories>pageSerializer</categories>
+                    <filterPropertiesFileName>
+                      ${project.build.directory}/jetspeed-demo-${project.version}/WEB-INF/conf/spring-filter.properties
+                    </filterPropertiesFileName>
+                    <applicationRootPath>
+                      ${project.build.directory}/jetspeed-demo-${project.version}
+                    </applicationRootPath>
+					<psmlPagesPath>${project.build.directory}/jetspeed-demo-${project.version}/WEB-INF/${seed.pages}</psmlPagesPath>
+                    <initProperties>
+                      <org.apache.jetspeed.database.user>${org.apache.jetspeed.production.database.user}</org.apache.jetspeed.database.user>
+                      <org.apache.jetspeed.database.password>${org.apache.jetspeed.production.database.password}</org.apache.jetspeed.database.password>
+                      <org.apache.jetspeed.database.url>${org.apache.jetspeed.production.database.url}</org.apache.jetspeed.database.url>
+                      <org.apache.jetspeed.database.driver>${org.apache.jetspeed.production.database.driver}</org.apache.jetspeed.database.driver>
+                    </initProperties>
+                  </psml>
+                </configuration>
+              </execution>
+            </executions>
+            <dependencies>
+              <dependency>
+                <groupId>org.apache.portals.jetspeed-2</groupId>
+                <artifactId>jetspeed-portal-resources</artifactId>
+                <version>${org.apache.portals.jetspeed.version}</version>
+              </dependency>
+              <dependency>
+                <groupId>org.apache.portals.jetspeed-2</groupId>
+                <artifactId>jetspeed-db-tools</artifactId>
+                <version>${org.apache.portals.jetspeed.version}</version>
+              </dependency>
+              <dependency>
+                <groupId>${org.apache.jetspeed.production.jdbc.driver.groupId}</groupId>
+                <artifactId>${org.apache.jetspeed.production.jdbc.driver.artifactId}</artifactId>
+                <version>${org.apache.jetspeed.production.jdbc.driver.version}</version>
+              </dependency>
+            </dependencies>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <!--
+        deploy-min profile:
+
+        - deploy minimal portal configuration to tomcat application server:
+          + jetspeed portal context /conf/tomcat/context.xml from jetspeed-portal-resources
+          + shared and system logging jetspeed jars
+          + expanded jetspeed portal
+          + j2-admin portlet application
+          + configure logging in server.xml
+    -->
+    <profile>
+      <id>deploy-min</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.portals.jetspeed-2</groupId>
+            <artifactId>jetspeed-unpack-maven-plugin</artifactId>
+            <version>${org.apache.portals.jetspeed.version}</version>
+            <executions>
+              <execution>
+                <id>unpack-appserver</id>
+                <goals>
+                  <goal>unpack</goal>
+                </goals>
+                <phase>generate-resources</phase>
+                <configuration>
+                  <unpack>
+                    <artifact>org.apache.portals.jetspeed-2:jetspeed-portal-resources:jar</artifact>
+                    <resources>
+                      <resource>
+                        <path>conf</path>
+                        <include>tomcat/context.xml</include>
+                      </resource>
+                    </resources>
+                  </unpack>
+                </configuration>
+              </execution>
+            </executions>
+            <dependencies>
+              <dependency>
+                <groupId>org.apache.portals.jetspeed-2</groupId>
+                <artifactId>jetspeed-portal-resources</artifactId>
+                <version>${org.apache.portals.jetspeed.version}</version>
+              </dependency>
+            </dependencies>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>resources</id>
+                <goals>
+                  <goal>resources</goal>
+                </goals>
+                <phase>process-resources</phase>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.portals.jetspeed-2</groupId>
+            <artifactId>jetspeed-fileutils-maven-plugin</artifactId>
+            <version>${org.apache.portals.jetspeed.version}</version>
+            <executions>
+              <execution>
+                <id>xml-encode-database-url</id>
+                <goals>
+                  <goal>event</goal>
+                </goals>
+                <phase>process-resources</phase>
+                <configuration>
+                  <srcFilePath>${project.build.directory}/resources/tomcat/context.xml</srcFilePath>
+                  <editPattern>%26</editPattern> <!-- use %26 for '&' -->
+                  <replacePattern>%26amp;</replacePattern> <!-- use %26 for '&' -->
+                  <event>edit</event>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>           
+          <plugin>
+            <groupId>org.apache.portals.jetspeed-2</groupId>
+            <artifactId>jetspeed-deploy-maven-plugin</artifactId>
+            <version>${org.apache.portals.jetspeed.version}</version>
+            <executions>
+              <execution>
+                <id>deploy</id>
+                <goals>
+                  <goal>deploy</goal>
+                </goals>
+                <phase>process-resources</phase>
+                <configuration>
+                  <targetBaseDir>${org.apache.jetspeed.server.home}</targetBaseDir>
+                  <portalName>${org.apache.jetspeed.portal.context.name}</portalName>
+                  <profile>tomcat${org.apache.jetspeed.catalina.version.major}</profile>
+                  <destinations>
+                    <context>webapps/${org.apache.jetspeed.portal.context.name}/META-INF</context>
+                  </destinations>
+                  <deployments>
+                    <!-- shared/lib -->
+                    <deployment>
+                      <artifact>org.apache.portals:portlet-api_2.1.0_spec:jar</artifact>
+                    </deployment>
+                    <deployment>
+                      <artifact>javax.ccpp:ccpp:jar</artifact>
+                    </deployment>
+                    <deployment>
+                      <artifact>org.apache.portals.jetspeed-2:jetspeed-api:jar</artifact>
+                    </deployment>
+                    <deployment>
+                      <artifact>org.apache.portals.jetspeed-2:jetspeed-commons:jar</artifact>
+                    </deployment>
+                    <deployment>
+                      <artifact>org.apache.portals.pluto:pluto-container-api:jar</artifact>
+                    </deployment>
+                    <deployment>
+                      <artifact>org.apache.portals.pluto:pluto-taglib:jar</artifact>
+                    </deployment>
+                    <deployment>
+                      <artifact>org.apache.portals.bridges:portals-bridges-common:jar</artifact>
+                    </deployment>
+                    <deployment>
+                      <artifact>${org.apache.jetspeed.production.jdbc.driver.groupId}:${org.apache.jetspeed.production.jdbc.driver.artifactId}:jar</artifact>
+                      <destination>system</destination>
+                    </deployment>
+                    <!-- jetspeed portal expanded -->
+                    <deployment>
+                      <artifact>org.apache.portals.jetspeed-2:jetspeed-demo:war</artifact>
+                      <expand>true</expand>
+                      <targetName>${org.apache.jetspeed.portal.context.name}</targetName>
+                      <delete>./${org.apache.jetspeed.portal.context.name}</delete>
+                    </deployment>
+                    <!-- demo portal tomcat context -->
+                    <deployment>
+                      <file>${project.build.directory}/resources/tomcat/context.xml</file>
+                      <destination>context</destination>
+                    </deployment>
+                    <!-- admin pa -->
+                    <deployment>
+                      <artifact>org.apache.portals.jetspeed-2:j2-admin:war</artifact>
+                      <delete>./j2-admin</delete>
+                    </deployment>
+                    <!-- logging -->
+                    <deployment>
+                      <artifact>org.apache.portals.applications:apa-logging:jar</artifact>
+                      <destination>server-lib</destination>
+                    </deployment>
+                  </deployments>
+                  <edits>
+                    <!-- logging -->
+                    <edit>
+                      <targetName>server.xml</targetName>
+                      <destination>server-conf</destination>
+                      <editorClassName>org.apache.portals.applications.logging.tomcat.ServerXMLConfigurer</editorClassName>
+                    </edit>
+                  </edits>
+                </configuration>
+              </execution>
+            </executions>
+
+            <dependencies>
+              <!-- shared/lib deps -->
+              <dependency>
+                <groupId>org.apache.portals</groupId>
+                <artifactId>portlet-api_2.1.0_spec</artifactId>
+                <version>${portals.portlet2-api-spec.version}</version>
+              </dependency>
+              <dependency>
+                <groupId>javax.ccpp</groupId>
+                <artifactId>ccpp</artifactId>
+                <version>${ccpp.version}</version>
+              </dependency>
+              <dependency>
+                <groupId>org.apache.portals.jetspeed-2</groupId>
+                <artifactId>jetspeed-api</artifactId>
+                <version>${org.apache.portals.jetspeed.version}</version>
+                <scope>runtime</scope>
+              </dependency>
+              <dependency>
+                <groupId>org.apache.portals.jetspeed-2</groupId>
+                <artifactId>jetspeed-commons</artifactId>
+                <version>${org.apache.portals.jetspeed.version}</version>
+              </dependency>
+              <dependency>
+                <groupId>org.apache.portals.pluto</groupId>
+                <artifactId>pluto-container-api</artifactId>
+                <version>${org.apache.pluto.version}</version>
+              </dependency>
+              <dependency>
+                <groupId>org.apache.portals.pluto</groupId>
+                <artifactId>pluto-taglib</artifactId>
+                <version>${org.apache.pluto.version}</version>
+              </dependency>
+              <dependency>
+                <groupId>org.apache.portals.bridges</groupId>
+                <artifactId>portals-bridges-common</artifactId>
+                <version>${org.apache.portals.bridges.common.version}</version>
+              </dependency>
+              <dependency>
+                <groupId>${org.apache.jetspeed.production.jdbc.driver.groupId}</groupId>
+                <artifactId>${org.apache.jetspeed.production.jdbc.driver.artifactId}</artifactId>
+                <version>${org.apache.jetspeed.production.jdbc.driver.version}</version>
+              </dependency>
+              <!-- jetspeed-demo -->
+              <dependency>
+                <groupId>org.apache.portals.jetspeed-2</groupId>
+                <artifactId>jetspeed-demo</artifactId>
+                <version>${project.version}</version>
+                <type>war</type>
+              </dependency>
+              <!-- j2-admin -->
+              <dependency>
+                <groupId>org.apache.portals.jetspeed-2</groupId>
+                <artifactId>j2-admin</artifactId>
+                <version>${org.apache.portals.jetspeed.version}</version>
+                <type>war</type>
+              </dependency>
+              <!-- logging -->
+              <dependency>
+                <groupId>org.apache.portals.applications</groupId>
+                <artifactId>apa-logging</artifactId>
+                <version>${org.apache.portals.applications.apa-logging.version}</version>
+              </dependency>
+
+              <!-- plugin own dependencies -->
+              <dependency>
+                <groupId>org.apache.portals.jetspeed-2</groupId>
+                <artifactId>jetspeed-deploy-tools</artifactId>
+                <version>${org.apache.portals.jetspeed.version}</version>
+              </dependency>
+            </dependencies>
+          </plugin>
+        </plugins>
+        <resources>
+          <resource>
+            <directory>${project.build.directory}/tomcat</directory>
+            <targetPath>../resources/tomcat</targetPath>
+            <filtering>true</filtering>
+          </resource>
+        </resources>
+      </build>
+    </profile>    
+    
+    <!--
+        deploy profile:
+
+        - deploy demo portal configuration to tomcat application server:
+          + jetspeed portal context /conf/tomcat/context.xml from jetspeed-portal-resources
+          + shared and system logging jetspeed jars
+          + expanded jetspeed portal
+          + j2-admin and demo portlet applications
+          + configure logging in server.xml
+    -->
+    <profile>
+      <id>deploy</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.portals.jetspeed-2</groupId>
+            <artifactId>jetspeed-unpack-maven-plugin</artifactId>
+            <version>${org.apache.portals.jetspeed.version}</version>
+            <executions>
+              <execution>
+                <id>unpack-appserver</id>
+                <goals>
+                  <goal>unpack</goal>
+                </goals>
+                <phase>generate-resources</phase>
+                <configuration>
+                  <unpack>
+                    <artifact>org.apache.portals.jetspeed-2:jetspeed-portal-resources:jar</artifact>
+                    <resources>
+                      <resource>
+                        <path>conf</path>
+                        <include>tomcat/context.xml</include>
+                      </resource>
+                    </resources>
+                  </unpack>
+                </configuration>
+              </execution>
+            </executions>
+            <dependencies>
+              <dependency>
+                <groupId>org.apache.portals.jetspeed-2</groupId>
+                <artifactId>jetspeed-portal-resources</artifactId>
+                <version>${org.apache.portals.jetspeed.version}</version>
+              </dependency>
+            </dependencies>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>resources</id>
+                <goals>
+                  <goal>resources</goal>
+                </goals>
+                <phase>process-resources</phase>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.portals.jetspeed-2</groupId>
+            <artifactId>jetspeed-fileutils-maven-plugin</artifactId>
+            <version>${org.apache.portals.jetspeed.version}</version>
+            <executions>
+              <execution>
+                <id>xml-encode-database-url</id>
+                <goals>
+                  <goal>event</goal>
+                </goals>
+                <phase>process-resources</phase>
+                <configuration>
+                  <srcFilePath>${project.build.directory}/resources/tomcat/context.xml</srcFilePath>
+                  <editPattern>%26</editPattern> <!-- use %26 for '&' -->
+                  <replacePattern>%26amp;</replacePattern> <!-- use %26 for '&' -->
+                  <event>edit</event>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>           
+          <plugin>
+            <groupId>org.apache.portals.jetspeed-2</groupId>
+            <artifactId>jetspeed-deploy-maven-plugin</artifactId>
+            <version>${org.apache.portals.jetspeed.version}</version>
+            <executions>
+              <execution>
+                <id>deploy</id>
+                <goals>
+                  <goal>deploy</goal>
+                </goals>
+                <phase>process-resources</phase>
+                <configuration>
+                  <targetBaseDir>${org.apache.jetspeed.server.home}</targetBaseDir>
+                  <portalName>${org.apache.jetspeed.portal.context.name}</portalName>
+                  <profile>tomcat${org.apache.jetspeed.catalina.version.major}</profile>
+                  <destinations>
+                    <context>webapps/${org.apache.jetspeed.portal.context.name}/META-INF</context>
+                  </destinations>
+                  <deployments>
+                    <!-- shared/lib -->
+                    <deployment>
+                      <artifact>org.apache.portals:portlet-api_2.1.0_spec:jar</artifact>
+                    </deployment>
+                    <deployment>
+                      <artifact>javax.ccpp:ccpp:jar</artifact>
+                    </deployment>
+                    <deployment>
+                      <artifact>org.apache.portals.jetspeed-2:jetspeed-api:jar</artifact>
+                    </deployment>
+                    <deployment>
+                      <artifact>org.apache.portals.jetspeed-2:jetspeed-commons:jar</artifact>
+                    </deployment>
+                    <deployment>
+                      <artifact>org.apache.portals.pluto:pluto-container-api:jar</artifact>
+                    </deployment>
+                    <deployment>
+                      <artifact>org.apache.portals.pluto:pluto-taglib:jar</artifact>
+                    </deployment>
+                    <deployment>
+                      <artifact>org.apache.portals.bridges:portals-bridges-common:jar</artifact>
+                    </deployment>
+                    <deployment>
+                      <artifact>${org.apache.jetspeed.production.jdbc.driver.groupId}:${org.apache.jetspeed.production.jdbc.driver.artifactId}:jar</artifact>
+                      <destination>system</destination>
+                    </deployment>
+                    <!-- jetspeed portal expanded -->
+                    <deployment>
+                      <artifact>org.apache.portals.jetspeed-2:jetspeed-demo:war</artifact>
+                      <expand>true</expand>
+                      <targetName>${org.apache.jetspeed.portal.context.name}</targetName>
+                      <delete>./${org.apache.jetspeed.portal.context.name}</delete>
+                    </deployment>
+                    <!-- demo portal tomcat context -->
+                    <deployment>
+                      <file>${project.build.directory}/resources/tomcat/context.xml</file>
+                      <destination>context</destination>
+                    </deployment>
+                    <!-- admin pa -->
+                    <deployment>
+                      <artifact>org.apache.portals.jetspeed-2:j2-admin:war</artifact>
+                      <delete>./j2-admin</delete>
+                    </deployment>
+                    <!-- demo pa's -->
+                    <deployment>
+                      <artifact>org.apache.portals.applications:apa-demo:war</artifact>
+                      <targetName>demo.war</targetName>
+                      <infuse>true</infuse>
+                      <delete>./demo</delete>
+                    </deployment>
+                    <deployment>
+                      <artifact>org.apache.portals.applications:apa-rss-war:war</artifact>
+                      <targetName>rss.war</targetName>
+                      <infuse>true</infuse>
+                      <delete>./rss</delete>
+                    </deployment>
+                    <deployment>
+                      <artifact>org.apache.portals.applications:apa-webcontent2-war:war</artifact>
+                      <targetName>webcontent2.war</targetName>
+                      <infuse>true</infuse>
+                      <delete>./webcontent2</delete>
+                    </deployment>
+                    <deployment>
+                      <artifact>org.apache.portals.applications:apa-dbbrowser-war:war</artifact>
+                      <targetName>dbbrowser.war</targetName>
+                      <infuse>true</infuse>
+                      <delete>./dbbrowser</delete>
+                    </deployment>
+
+                    <!-- logging -->
+                    <deployment>
+                      <artifact>org.apache.portals.applications:apa-logging:jar</artifact>
+                      <destination>server-lib</destination>
+                    </deployment>
+                  </deployments>
+                  <edits>
+                    <!-- logging -->
+                    <edit>
+                      <targetName>server.xml</targetName>
+                      <destination>server-conf</destination>
+                      <editorClassName>org.apache.portals.applications.logging.tomcat.ServerXMLConfigurer</editorClassName>
+                    </edit>
+                  </edits>
+                </configuration>
+              </execution>
+            </executions>
+
+            <dependencies>
+              <!-- shared/lib deps -->
+              <dependency>
+                <groupId>org.apache.portals</groupId>
+                <artifactId>portlet-api_2.1.0_spec</artifactId>
+                <version>${portals.portlet2-api-spec.version}</version>
+              </dependency>
+              <dependency>
+                <groupId>javax.ccpp</groupId>
+                <artifactId>ccpp</artifactId>
+                <version>${ccpp.version}</version>
+              </dependency>
+              <dependency>
+                <groupId>org.apache.portals.jetspeed-2</groupId>
+                <artifactId>jetspeed-api</artifactId>
+                <version>${org.apache.portals.jetspeed.version}</version>
+                <scope>runtime</scope>
+              </dependency>
+              <dependency>
+                <groupId>org.apache.portals.jetspeed-2</groupId>
+                <artifactId>jetspeed-commons</artifactId>
+                <version>${org.apache.portals.jetspeed.version}</version>
+              </dependency>
+              <dependency>
+                <groupId>org.apache.portals.pluto</groupId>
+                <artifactId>pluto-container-api</artifactId>
+                <version>${org.apache.pluto.version}</version>
+              </dependency>
+              <dependency>
+                <groupId>org.apache.portals.pluto</groupId>
+                <artifactId>pluto-taglib</artifactId>
+                <version>${org.apache.pluto.version}</version>
+              </dependency>
+              <dependency>
+                <groupId>org.apache.portals.bridges</groupId>
+                <artifactId>portals-bridges-common</artifactId>
+                <version>${org.apache.portals.bridges.common.version}</version>
+              </dependency>
+              <dependency>
+                <groupId>${org.apache.jetspeed.production.jdbc.driver.groupId}</groupId>
+                <artifactId>${org.apache.jetspeed.production.jdbc.driver.artifactId}</artifactId>
+                <version>${org.apache.jetspeed.production.jdbc.driver.version}</version>
+              </dependency>
+              <!-- jetspeed-demo -->
+              <dependency>
+                <groupId>org.apache.portals.jetspeed-2</groupId>
+                <artifactId>jetspeed-demo</artifactId>
+                <version>${project.version}</version>
+                <type>war</type>
+              </dependency>
+              <!-- j2-admin -->
+              <dependency>
+                <groupId>org.apache.portals.jetspeed-2</groupId>
+                <artifactId>j2-admin</artifactId>
+                <version>${org.apache.portals.jetspeed.version}</version>
+                <type>war</type>
+              </dependency>
+              <!-- demo pa's -->
+              <dependency>
+                <groupId>org.apache.portals.applications</groupId>
+                <artifactId>apa-rss-war</artifactId>
+                <version>${org.apache.portals.applications.apa-rss.version}</version>
+                <type>war</type>
+              </dependency>
+              <dependency>
+                <groupId>org.apache.portals.applications</groupId>
+                <artifactId>apa-demo</artifactId>
+                <version>${org.apache.portals.applications.apa-demo.version}</version>
+                <type>war</type>
+              </dependency>
+              <dependency>
+                <groupId>org.apache.portals.applications</groupId>
+                <artifactId>apa-webcontent2-war</artifactId>
+                <version>${org.apache.portals.applications.apa-webcontent2.version}</version>
+                <type>war</type>
+              </dependency>
+              <dependency>
+                <groupId>org.apache.portals.applications</groupId>
+                <artifactId>apa-dbbrowser-war</artifactId>
+                <version>${org.apache.portals.applications.apa-dbbrowser.version}</version>
+                <type>war</type>
+              </dependency>
+              <!-- logging -->
+              <dependency>
+                <groupId>org.apache.portals.applications</groupId>
+                <artifactId>apa-logging</artifactId>
+                <version>${org.apache.portals.applications.apa-logging.version}</version>
+              </dependency>
+
+              <!-- plugin own dependencies -->
+              <dependency>
+                <groupId>org.apache.portals.jetspeed-2</groupId>
+                <artifactId>jetspeed-deploy-tools</artifactId>
+                <version>${org.apache.portals.jetspeed.version}</version>
+              </dependency>
+            </dependencies>
+          </plugin>
+        </plugins>
+        <resources>
+          <resource>
+            <directory>${project.build.directory}/tomcat</directory>
+            <targetPath>../resources/tomcat</targetPath>
+            <filtering>true</filtering>
+          </resource>
+        </resources>
+      </build>
+    </profile>
+
+    <!--
+        deploy-dbpsml profile:
+
+        - install dbpsml version of spring-filter-key.properties into deployed jetspeed portal at /WEB-INF/conf
+    -->
+    <profile>
+      <id>deploy-dbpsml</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.portals.jetspeed-2</groupId>
+            <artifactId>jetspeed-deploy-maven-plugin</artifactId>
+            <version>${org.apache.portals.jetspeed.version}</version>
+            <executions>
+              <execution>
+                <id>deploy</id>
+                <goals>
+                  <goal>deploy</goal>
+                </goals>
+                <phase>process-resources</phase>
+                <configuration>
+                  <targetBaseDir>${org.apache.jetspeed.server.home}</targetBaseDir>
+                  <portalName>${org.apache.jetspeed.portal.context.name}</portalName>
+                  <profile>tomcat${org.apache.jetspeed.catalina.version.major}</profile>
+                  <destinations>
+                    <conf>webapps/${org.apache.jetspeed.portal.context.name}/WEB-INF/conf</conf>
+                  </destinations>
+                  <deployments>
+                    <deployment>
+                      <file>${basedir}/src/etc/dbpsml/spring-filter-key.properties</file>
+                      <destination>conf</destination>
+                    </deployment>
+                  </deployments>
+                </configuration>
+              </execution>
+            </executions>
+            <dependencies>
+              <!-- plugin own dependencies -->
+              <dependency>
+                <groupId>org.apache.portals.jetspeed-2</groupId>
+                <artifactId>jetspeed-deploy-tools</artifactId>
+                <version>${org.apache.portals.jetspeed.version}</version>
+              </dependency>
+            </dependencies>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    
+    <!--
+        deploy-pages profile:
+
+        - replace /WEB-INF/pages with /WEB-INF/${deploy.pages} in deployed jetspeed portal
+    -->
+    <profile>
+      <id>deploy-pages</id>
+      <build>
+        <plugins>
+	      <plugin>
+	        <groupId>org.apache.portals.jetspeed-2</groupId>
+	        <artifactId>jetspeed-fileutils-maven-plugin</artifactId>
+	        <version>${org.apache.portals.jetspeed.version}</version>
+	        <executions>
+	          <execution>
+	            <id>deploy-pages</id>
+	            <goals>
+	              <goal>event</goal>
+	            </goals>
+	            <phase>process-resources</phase>
+	            <configuration>
+	              <srcDirectoryPath>${org.apache.jetspeed.server.home}/webapps/${org.apache.jetspeed.portal.context.name}/WEB-INF/${deploy.pages}</srcDirectoryPath>
+	              <destDirectoryPath>${org.apache.jetspeed.server.home}/webapps/${org.apache.jetspeed.portal.context.name}/WEB-INF/pages</destDirectoryPath>
+	              <event>move</event>
+	            </configuration>
+	          </execution>
+	        </executions>
+	      </plugin>           
+        </plugins>
+      </build>
+    </profile>
+
+    <!--
+        delete-pages profile:
+
+        - remove /WEB-INF/${delete.pages} from deployed jetspeed portal
+    -->
+    <profile>
+      <id>delete-pages</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.portals.jetspeed-2</groupId>
+            <artifactId>jetspeed-fileutils-maven-plugin</artifactId>
+            <version>${org.apache.portals.jetspeed.version}</version>
+            <executions>
+              <execution>
+                <id>delete-pages</id>
+                <goals>
+                  <goal>event</goal>
+                </goals>
+                <phase>process-resources</phase>
+                <configuration>
+                  <srcDirectoryPath>${org.apache.jetspeed.server.home}/webapps/${org.apache.jetspeed.portal.context.name}/WEB-INF/${delete.pages}</srcDirectoryPath>
+                  <event>delete</event>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>           
+        </plugins>
+      </build>
+    </profile>
+
+    <!--
+        configure profile:
+
+        - configure portal deployed /WEB-INF/${config.file} by replacing all ${config.pattern} occurences with ${config.replacement}
+    -->
+    <profile>
+      <id>configure</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.portals.jetspeed-2</groupId>
+            <artifactId>jetspeed-fileutils-maven-plugin</artifactId>
+            <version>${org.apache.portals.jetspeed.version}</version>
+            <executions>
+              <execution>
+                <id>configure</id>
+                <goals>
+                  <goal>event</goal>
+                </goals>
+                <phase>process-resources</phase>
+                <configuration>
+                  <srcFilePath>${org.apache.jetspeed.server.home}/webapps/${org.apache.jetspeed.portal.context.name}/WEB-INF/${config.file}</srcFilePath>
+                  <editPattern>${config.pattern}</editPattern>
+                  <replacePattern>${config.replacement}</replacePattern>
+                  <event>edit</event>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>           
+        </plugins>
+      </build>
+    </profile>
+
+    <!--
+        delete-file profile:
+
+        - remove /WEB-INF/${delete.file} from deployed jetspeed portal
+    -->
+    <profile>
+      <id>delete-file</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.portals.jetspeed-2</groupId>
+            <artifactId>jetspeed-fileutils-maven-plugin</artifactId>
+            <version>${org.apache.portals.jetspeed.version}</version>
+            <executions>
+              <execution>
+                <id>delete-file</id>
+                <goals>
+                  <goal>event</goal>
+                </goals>
+                <phase>process-resources</phase>
+                <configuration>
+                  <srcFilePath>${org.apache.jetspeed.server.home}/webapps/${org.apache.jetspeed.portal.context.name}/WEB-INF/${delete.file}</srcFilePath>
+                  <event>delete</event>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>           
+        </plugins>
+      </build>
+    </profile>
+
+  </profiles>
+
+</project>

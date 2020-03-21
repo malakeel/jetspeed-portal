@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<!--
+		Licensed to the Apache Software Foundation (ASF) under one or more
+		contributor license agreements. See the NOTICE file distributed with
+		this work for additional information regarding copyright ownership.
+		The ASF licenses this file to You under the Apache License, Version
+		2.0 (the "License"); you may not use this file except in compliance
+		with the License. You may obtain a copy of the License at
+
+		http://www.apache.org/licenses/LICENSE-2.0 Unless required by
+		applicable law or agreed to in writing, software distributed under the
+		License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+		CONDITIONS OF ANY KIND, either express or implied. See the License for
+		the specific language governing permissions and limitations under the
+		License.
+	-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	elementFormDefault="qualified" targetNamespace="http://portals.apache.org/jetspeed"
+	xmlns:tns="http://portals.apache.org/jetspeed">
+	<xs:import namespace="http://www.w3.org/XML/1998/namespace"
+		schemaLocation="http://www.w3.org/2001/xml.xsd" />
+	<xs:include schemaLocation="psml-core.xsd"/>
+	<xs:element name="page-template">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element minOccurs="0" ref="tns:defaults" />
+				<xs:element minOccurs="0" ref="tns:title" />
+				<xs:element minOccurs="0" ref="tns:short-title" />
+				<xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:metadata" />
+				<xs:element ref="tns:fragment" />
+				<xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:menu" />
+				<xs:element minOccurs="0" ref="tns:security-constraints" />
+			</xs:sequence>
+			<xs:attribute name="id" use="required" type="xs:ID" />
+			<xs:attribute name="version" use="optional" type="xs:double" />
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="fragment" >
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:property" />
+				<xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:preference" />
+				<xs:choice minOccurs="0" maxOccurs="unbounded">		        
+				  <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:fragment" />
+				  <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:fragment-reference" />				
+				  <xs:element minOccurs="0" maxOccurs="1" ref="tns:page-fragment" />				
+				</xs:choice>
+				<xs:element minOccurs="0" maxOccurs="1" ref="tns:security-constraints" />
+			</xs:sequence>
+			<xs:attribute name="id" use="required" type="xs:ID" />
+			<xs:attribute name="name" use="required" type="xs:string" />
+			<xs:attribute name="type" use="required" type="xs:string" />
+			<xs:attribute name="decorator" use="optional" type="xs:string" />
+		</xs:complexType>	
+	</xs:element>
+	<xs:element name="page-fragment">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:property" />
+				<xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:preference" />
+				<xs:element minOccurs="0" maxOccurs="1" ref="tns:security-constraints" />
+			</xs:sequence>
+			<xs:attribute name="id" use="required" type="xs:ID" />
+			<xs:attribute name="name" use="required" type="xs:string" />
+			<xs:attribute name="type" use="required" type="xs:string" />
+			<xs:attribute name="decorator" use="optional" type="xs:string" />
+		</xs:complexType>	
+	</xs:element>
+	
+</xs:schema>
