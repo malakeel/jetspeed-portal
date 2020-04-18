@@ -10,7 +10,7 @@
 - [x] migrate database scripts to liquibase
 - [ ] refator junit test cases
 - [x] upgrade version
- [ ] Another testing task
- [x] Completed example
+- [ ] Another testing task
+- [x] Completed example
 
 
